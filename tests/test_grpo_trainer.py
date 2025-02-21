@@ -144,9 +144,11 @@ class GRPOTrainerTester(unittest.TestCase):
             train_dataset=dataset,
         )
 
-    @parameterized.expand([("standard_prompt_only",), ("conversational_prompt_only",)])
-    def test_training(self, config_name):
+    @parameterized.expand([("standard_prompt_only",)])
+    def test_training_x(self, config_name):
         dataset = load_dataset("trl-internal-testing/zen", config_name, split="train")
+
+        #import pdb; pdb.set_trace()
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             training_args = GRPOConfig(

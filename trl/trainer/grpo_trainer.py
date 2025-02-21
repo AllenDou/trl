@@ -529,6 +529,7 @@ class GRPOTrainer(Trainer):
                 self.reward_funcs[i] = self.accelerator.prepare_model(reward_func, evaluation_mode=True)
 
     def _set_signature_columns_if_needed(self):
+        import pdb; pdb.set_trace()
         # If `self.args.remove_unused_columns` is True, non-signature columns are removed.
         # By default, this method sets `self._signature_columns` to the model's expected inputs.
         # In GRPOTrainer, we preprocess data, so using the model's signature columns doesn't work.
@@ -578,6 +579,7 @@ class GRPOTrainer(Trainer):
         )
 
     def _get_eval_sampler(self, eval_dataset) -> Sampler:
+        import pdb; pdb.set_trace()
         # See _get_train_sampler for an explanation of the sampler.
         return RepeatRandomSampler(
             data_source=eval_dataset,
@@ -586,6 +588,7 @@ class GRPOTrainer(Trainer):
         )
 
     def _enable_gradient_checkpointing(self, model: PreTrainedModel, args: GRPOConfig) -> PreTrainedModel:
+        import pdb; pdb.set_trace()
         """Enables gradient checkpointing for the model."""
         # Ensure use_cache is disabled
         model.config.use_cache = False
@@ -610,6 +613,7 @@ class GRPOTrainer(Trainer):
     # Get the per-token log probabilities for the completions for the model and the reference model
     @profiling_decorator
     def _get_per_token_logps(self, model, input_ids, attention_mask, logits_to_keep):
+        import pdb; pdb.set_trace()
         # We add 1 to `logits_to_keep` because the last logits of the sequence is later excluded
         logits = model(input_ids=input_ids, attention_mask=attention_mask, logits_to_keep=logits_to_keep + 1).logits
         logits = logits[:, :-1, :]  # (B, L-1, V), exclude the last logit: it corresponds to the next token pred
@@ -618,10 +622,12 @@ class GRPOTrainer(Trainer):
         # For transformers<=4.48, logits_to_keep argument isn't supported, so here we drop logits ourselves.
         # See https://github.com/huggingface/trl/issues/2770
         logits = logits[:, -logits_to_keep:]
-        return selective_log_softmax(logits, input_ids)  #  compute logprobs for the input tokens
+        ret = selective_log_softmax(logits, input_ids)  #  compute logprobs for the input tokens
+        return ret
 
     @profiling_decorator
     def _move_model_to_vllm(self):
+        import pdb; pdb.set_trace()
         with unwrap_model_for_generation(
             self.model, self.accelerator, gather_deepspeed3_params=self.args.ds3_gather_for_generation
         ) as unwrapped_model:
@@ -670,6 +676,7 @@ class GRPOTrainer(Trainer):
     def _generate_and_score_completions(
         self, inputs: dict[str, Union[torch.Tensor, Any]]
     ) -> dict[str, Union[torch.Tensor, Any]]:
+        import pdb; pdb.set_trace()
         device = self.accelerator.device
         prompts = [x["prompt"] for x in inputs]
         prompts_text = [maybe_apply_chat_template(example, self.processing_class)["prompt"] for example in inputs]
@@ -869,6 +876,7 @@ class GRPOTrainer(Trainer):
 
     @profiling_decorator
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
+        import pdb; pdb.set_trace()
         if return_outputs:
             raise ValueError("The GRPOTrainer does not support returning outputs")
         # Compute the per-token log probabilities for the model
@@ -915,6 +923,7 @@ class GRPOTrainer(Trainer):
         return loss
 
     def prediction_step(self, model, inputs, prediction_loss_only, ignore_keys: Optional[list[str]] = None):
+        import pdb; pdb.set_trace()
         inputs = self._prepare_inputs(inputs)
         with torch.no_grad():
             with self.compute_loss_context_manager():
